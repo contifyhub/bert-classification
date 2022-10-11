@@ -80,7 +80,7 @@ async def predict_topic(story: BertText, auth_status: int = Depends(is_authentic
         outputs = trainer.model(**encoding)
         logits = outputs.logits
         sigmoid = torch.nn.Sigmoid()
-        probs = sigmoid(logits.squeeze().gpu())
+        probs = sigmoid(logits.squeeze().cpu())
         predictions = np.zeros(probs.shape)
         predictions[np.where(probs >= 0.5)] = 1
         topics_tags = [model.config.id2label[idx] for idx, label in
