@@ -88,10 +88,10 @@ async def predict_topic(story: BertText, auth_status: int = Depends(is_authentic
         output_labels = {'predicted_tags': topics_tags, "story_id": story_id}
         logger.info(
             f"Bert Classifier: completed prediction  for story_id: {story} "
-            f"in {(dt - datetime.now()).total_seconds()} Seconds")
+            f"in {(datetime.now() - dt).total_seconds()} Seconds")
         return output_labels
     except Exception as err:
-        logger.info(
+        logger.error(
             f"Bert Classifier: Error occurred for story id :{story_id} "
             f" Error: {err} , Traceback: {traceback.format_exc()}")
 
