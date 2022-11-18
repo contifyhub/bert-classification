@@ -87,7 +87,7 @@ async def predict_topic(story: BertText, auth_status: int = Depends(is_authentic
                        enumerate(predictions) if label > 0.6]
         output_labels = {'predicted_tags': topics_tags, "story_id": story_id}
         logger.info(
-            f"Bert Classifier: completed prediction  for story_id: {story} "
+            f"Bert Classifier: completed prediction  for story_id: {story_id} "
             f"in {(datetime.now() - dt).total_seconds()} Seconds")
         return output_labels
     except Exception as err:
