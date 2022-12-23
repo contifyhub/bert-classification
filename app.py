@@ -16,34 +16,6 @@ from transformers import (AutoModelForSequenceClassification,
                           Trainer,
                           AutoTokenizer,
                           AutoModelForSeq2SeqLM)
-from constants import MODEL_FILE_NAME, SUMMARY_MODEL_FILE_NAME
-
-
-@lru_cache()
-def get_bert_classifier():
-    topic_model = AutoModelForSequenceClassification.from_pretrained(
-        f"{MODEL_FILE_NAME}/")
-    topic_trainer = Trainer(model=topic_model)
-    topic_tokenizer = AutoTokenizer.from_pretrained(
-        f"{MODEL_FILE_NAME}/")
-    return topic_model, topic_trainer, topic_tokenizer
-
-
-@lru_cache()
-def get_bert_summarizer():
-    summary_tokenizer = AutoTokenizer.from_pretrained(
-        f"./{SUMMARY_MODEL_FILE_NAME}"
-    )
-    summary_model = AutoModelForSeq2SeqLM.from_pretrained(
-        f"./{SUMMARY_MODEL_FILE_NAME}"
-        f"")
-    return summary_tokenizer, summary_model
-
-
-summarization_tokenizer, summarization_model = get_bert_summarizer()
-model, trainer, tokenizer = get_bert_classifier()
-app = FastAPI(docs_url=None, redoc_url=None)
-security = HTTPBasic()
 
 
 @lru_cache()
@@ -53,6 +25,33 @@ def get_settings():
 
 settings = get_settings()
 logger_config.dictConfig(settings.LOGGING)
+
+
+@lru_cache()
+def get_bert_classifier():
+    topic_model = AutoModelForSequenceClassification.from_pretrained(
+        f"{settings.TOPIC_MODEL_FILE_NAME}/")
+    topic_trainer = Trainer(model=topic_model)
+    topic_tokenizer = AutoTokenizer.from_pretrained(
+        f"{settings.TOPIC_MODEL_FILE_NAME}/")
+    return topic_model, topic_trainer, topic_tokenizer
+
+
+@lru_cache()
+def get_bert_summarizer():
+    summary_tokenizer = AutoTokenizer.from_pretrained(
+        f"./{settings.SUMMARY_MODEL_FILE_NAME}"
+    )
+    summary_model = AutoModelForSeq2SeqLM.from_pretrained(
+        f"./{settings.SUMMARY_MODEL_FILE_NAME}"
+        f"")
+    return summary_tokenizer, summary_model
+
+
+summarization_tokenizer, summarization_model = get_bert_summarizer()
+model, trainer, tokenizer = get_bert_classifier()
+app = FastAPI(docs_url=None, redoc_url=None)
+security = HTTPBasic()
 
 logger = logging.getLogger(__name__)
 
