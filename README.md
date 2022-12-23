@@ -12,7 +12,7 @@ Bart-based-Summarization is a fine-tuned BART-SUMMARIZATION model that is ready 
 3.Run api using python app.py . <br />
 
 # MODELS 
-1.bert-fine-tuned-sem_eval-english: Topic . <br />
-2.distilbart-cnn-12-6: Summarization. <br />
+1.bert-topic: Topic . <br />
+2.bert-summarization: Summarization. <br />
 
 
