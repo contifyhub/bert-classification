@@ -84,10 +84,10 @@ async def predict_industry(story: BertText,
         probs = sigmoid(logits.squeeze().cpu())
         predictions = np.zeros(probs.shape)
         predictions[np.where(probs >= INDUSTRY_PREDICTION_THRESHOLD)] = 1
-        topics_tags = [model.config.id2label[idx] for idx, label in
+        industry_labels = [model.config.id2label[idx] for idx, label in
                        enumerate(predictions) if label == 1]
-        topics_tags = [INDUSTRY_MAPPING[int(i)] for i in topics_tags]
-        output_labels = {'predicted_tags': topics_tags, "story_id": story_id}
+        industry_tags = [INDUSTRY_MAPPING[int(i)] for i in industry_labels]
+        output_labels = {'predicted_tags': industry_tags, "story_id": story_id}
         logger.info(
             f"Industry Bert Classifier: completed prediction  for story_id: {story_id} "
             f"in {(datetime.now() - dt).total_seconds()} Seconds")
