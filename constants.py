@@ -1,5 +1,6 @@
 INDUSTRY_PREDICTION_THRESHOLD = 0.7
 
+# contify's custom industry to standard industry mapping
 INDUSTRY_MAPPING = {98636: 622,
  98637: 545,
  98638: 128,
