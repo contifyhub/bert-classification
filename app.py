@@ -147,7 +147,4 @@ async def summarize_text(story: SummaryText,
         logger.info(f"Ner Bert: Error occurred for story {summary_text} "
                     f" Error: {err} , Traceback: {traceback.format_exc()}")
 
-if __name__ == '__main__':
-    uvicorn.run(
-        f"{Path(__file__).stem}:app", port=8082, host='localhost', reload=True
-    )
+

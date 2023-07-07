@@ -7,8 +7,11 @@ ROOT_DIR = os.path.join("..")
 class BertClassifierSettings(BaseSettings):
     BERT_CLASSIFICATION_USERNAME: str = ''
     BERT_CLASSIFICATION_PASSWORD: str = ''
+    BERT_INDUSTRY_USERNAME: str = ''
+    BERT_INDUSTRY_PASSWORD: str = ''
     TOPIC_MODEL_FILE_NAME = ''
     SUMMARY_MODEL_FILE_NAME = ''
+    INDUSTRY_MODEL_FILE_NAME = ''
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
