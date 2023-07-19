@@ -16,9 +16,10 @@ from serializers import BertText
 import numpy as np
 import torch
 from functools import lru_cache
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoConfig
 import torch.neuron
 
+from utils import clean_entity, extract_ner, predict_fn
 
 num_cores = 2
 os.environ['NEURON_RT_NUM_CORES'] = str(num_cores)
@@ -40,11 +41,17 @@ def get_bert_classifier():
         f"{settings.INDUSTRY_MODEL_FILE_NAME}/")
     topic_tokenizer = AutoTokenizer.from_pretrained(
         f"{settings.TOPIC_MODEL_FILE_NAME}/")
-    return industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer
+    model_dir = f"{settings.NER_MODEL_DIR}"
+    ner_tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    ner_neuron_model = torch.jit.load(
+        os.path.join(model_dir, f"{settings.AWS_NEURON_TRACED_WEIGHTS_NAME}"))
+    ner_model_config = AutoConfig.from_pretrained(model_dir)
+    return industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer, ner_tokenizer, ner_neuron_model, ner_model_config
 
 
 
-industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer = get_bert_classifier()
+
+industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer, ner_tokenizer, ner_neuron_model, ner_model_config = get_bert_classifier()
 app = FastAPI(docs_url=None, redoc_url=None)
 security = HTTPBasic()
 
@@ -158,4 +165,50 @@ async def predict_industry(story: BertText,
         logger.error(
             f"Industry Bert Classifier: Error occurred for story id :{story_id} "
             f" Error: {err} , Traceback: {traceback.format_exc()}")
+
+
+@app.post('/predict/ner/')
+async def predict_ner(story: BertText,
+                        auth_status: int = Depends(is_authenticated_user)):
+    story_id = ""
+    try:
+        dt = datetime.now()
+        data = story.dict()['story']
+        input_text, story_id = data['story_text'], data['story_id']
+        predictions = predict_fn(ner_tokenizer, ner_neuron_model, ner_model_config, input_text)
+        ner_results = extract_ner(predictions)
+
+        location_entities = [entity for entity in ner_results if
+                             entity['label'] in ['LOC', 'PER', 'ORG']]
+        entity_occurrences = set()
+        final_res = []
+        for entity in location_entities:
+            full_word = clean_entity(entity['entity'])
+            start_index = 0
+
+            while start_index != -1:
+                start_index = input_text.find(full_word, start_index)
+                if start_index != -1 and start_index not in entity_occurrences:
+                    end_index = start_index + len(full_word)
+                    entity_occurrences.add(start_index)
+                    final_res.append({
+                        'entity': full_word,
+                        'label': entity['label'],
+                        'start_index': start_index,
+                        'end_index': end_index
+                    })
+                    start_index = end_index  # Update the start_index to the next character after the current occurrence
+                else:
+                    break  # No more occurrences found, exit the loo
+        logger.info(
+            f"NER Bert Classifier: completed prediction  for story_id: {story_id} "
+            f"in {(datetime.now() - dt).total_seconds()} Seconds")
+        return final_res
+    except Exception as err:
+        logger.error(
+            f"NER Bert : Error occurred for story id :{story_id} "
+            f" Error: {err} , Traceback: {traceback.format_exc()}")
+
+
+
 
