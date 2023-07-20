@@ -12,7 +12,7 @@ from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD
 )
-from serializers import BertText
+from serializers import BertText, NerText
 import numpy as np
 import torch
 from functools import lru_cache
@@ -168,7 +168,7 @@ async def predict_industry(story: BertText,
 
 
 @app.post('/predict/ner/')
-async def predict_ner(story: BertText,
+async def predict_ner(story: NerText,
                         auth_status: int = Depends(is_authenticated_user)):
     story_id = ""
     try:
