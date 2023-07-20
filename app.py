@@ -191,9 +191,9 @@ async def predict_ner(story: BertText,
                     end_index = start_index + len(full_word)
                     entity_occurrences.add(start_index)
                     entity_list.append([
-                        full_word,
+                        [start_index,end_index],
                         entity['label'],
-                        [start_index,end_index]
+                        full_word
                     ])
 
                     start_index = end_index  # Update the start_index to the next character after the current occurrence
