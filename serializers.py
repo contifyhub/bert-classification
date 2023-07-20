@@ -7,3 +7,6 @@ class BertText(BaseModel):
 
 class SummaryText(BaseModel):
     data: dict
+
+class NerText(BaseModel):
+    text: list
