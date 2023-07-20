@@ -199,10 +199,10 @@ async def predict_ner(story: BertText,
                     start_index = end_index  # Update the start_index to the next character after the current occurrence
                 else:
                     break  # No more occurrences found, exit the loo
-        final_res = {
+        final_res = [{
             story_id: entity_list,
             'story_text': input_text
-        }
+        }]
         logger.info(
             f"NER Bert Classifier: completed prediction  for story_id: {story_id} "
             f"in {(datetime.now() - dt).total_seconds()} Seconds")
