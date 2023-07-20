@@ -21,7 +21,7 @@ import torch.neuron
 
 from utils import clean_entity, extract_ner, predict_fn
 
-num_cores = 2
+num_cores = 0
 os.environ['NEURON_RT_NUM_CORES'] = str(num_cores)
 
 @lru_cache()
