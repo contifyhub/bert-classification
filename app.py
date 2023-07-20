@@ -181,25 +181,28 @@ async def predict_ner(story: BertText,
         location_entities = [entity for entity in ner_results if
                              entity['label'] in ['LOC', 'PER', 'ORG']]
         entity_occurrences = set()
-        final_res = []
+        entity_list = []
         for entity in location_entities:
             full_word = clean_entity(entity['entity'])
             start_index = 0
-
             while start_index != -1:
                 start_index = input_text.find(full_word, start_index)
                 if start_index != -1 and start_index not in entity_occurrences:
                     end_index = start_index + len(full_word)
                     entity_occurrences.add(start_index)
-                    final_res.append({
-                        'entity': full_word,
-                        'label': entity['label'],
-                        'start_index': start_index,
-                        'end_index': end_index
-                    })
+                    entity_list.append([
+                        full_word,
+                        entity['label'],
+                        [start_index,end_index]
+                    ])
+
                     start_index = end_index  # Update the start_index to the next character after the current occurrence
                 else:
                     break  # No more occurrences found, exit the loo
+        final_res = {
+            'story_id': entity_list,
+            'story_text': input_text
+        }
         logger.info(
             f"NER Bert Classifier: completed prediction  for story_id: {story_id} "
             f"in {(datetime.now() - dt).total_seconds()} Seconds")
