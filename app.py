@@ -200,7 +200,7 @@ async def predict_ner(story: BertText,
                 else:
                     break  # No more occurrences found, exit the loo
         final_res = {
-            'story_id': entity_list,
+            story_id: entity_list,
             'story_text': input_text
         }
         logger.info(
