@@ -173,11 +173,10 @@ async def predict_ner(story: BertText,
     story_id = ""
     try:
         dt = datetime.now()
-        data = story.dict()['story']
-        input_text, story_id = data['story_text'], data['story_id']
+        data = story.dict()['text']
+        input_text, story_id = data[0][0], data[0][1]['story_id']
         predictions = predict_fn(ner_tokenizer, ner_neuron_model, ner_model_config, input_text)
         ner_results = extract_ner(predictions)
-
         location_entities = [entity for entity in ner_results if
                              entity['label'] in ['LOC', 'PER', 'ORG']]
         entity_occurrences = set()
