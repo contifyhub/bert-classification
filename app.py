@@ -174,7 +174,7 @@ async def predict_ner(story: NerText,
     try:
         dt = datetime.now()
         data = story.dict()['text']
-        input_text, story_id = data[0][0], data[0][1]['story_id']
+        input_text, story_id = data[0][0].lower(), data[0][1]['story_id']
         predictions = predict_fn(ner_tokenizer, ner_neuron_model, ner_model_config, input_text)
         ner_results = extract_ner(predictions)
         location_entities = [entity for entity in ner_results if
