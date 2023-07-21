@@ -45,8 +45,8 @@ def extract_ner(predictions):
     current_entity = None
 
     for token_data in predictions:
-        token = token_data['word']
-        label = token_data['entity']
+        token = token_data['token']
+        label = token_data['label']
 
         if label.startswith('B-') and "##" not in token:
             if current_entity:
