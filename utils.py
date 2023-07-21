@@ -37,47 +37,48 @@ def predict_fn(tokenizer,model,model_config, input_text):
         index += 1
     return outputs
 
+def clean_entity(entity):
+    return entity.replace('##', '')
+
 def extract_ner(predictions):
     ner_results = []
     current_entity = None
-    start_index = 0
-    end_index = 0
 
     for token_data in predictions:
-        token = token_data['token']
-        label = token_data['label']
+        token = token_data['word']
+        label = token_data['entity']
 
-        if label.startswith('B-'):
+        if label.startswith('B-') and "##" not in token:
             if current_entity:
-                current_entity['end_index'] = end_index
+                current_entity['entity'] = clean_entity(current_entity['entity'])
                 ner_results.append(current_entity)
 
-            start_index = token_data['index']
-            end_index = token_data['index'] + len(token)
             current_entity = {
                 'entity': token,
                 'label': label[2:],
-                'start_index': start_index
             }
-        elif label.startswith('I-'):
+        elif label.startswith('B-') and "##" in token:
+            if current_entity:
+                current_entity['entity'] += token
+
+        elif label.startswith('I-') and "##" not in token:
             if current_entity:
                 current_entity['entity'] += ' ' + token
-                end_index = token_data['index'] + len(token)
+
+        elif label.startswith('I-') and "##" in token:
+            if current_entity:
+                current_entity['entity'] += token
+
         else:
             if current_entity:
-                current_entity['end_index'] = end_index
+                current_entity['entity'] = clean_entity(current_entity['entity'])
                 ner_results.append(current_entity)
                 current_entity = None
 
-        end_index = token_data['index'] + len(token)
-
     if current_entity:
-        current_entity['end_index'] = end_index
+        current_entity['entity'] = clean_entity(current_entity['entity'])
         ner_results.append(current_entity)
 
     return ner_results
 
-
-def clean_entity(entity):
-    return entity.replace(" ##", "")
 
