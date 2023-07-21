@@ -198,8 +198,9 @@ async def predict_ner(story: NerText,
                     start_index = end_index  # Update the start_index to the next character after the current occurrence
                 else:
                     break  # No more occurrences found, exit the loo
+        sorted_entity_list = sorted(entity_list, key=lambda x: x[0][0])
         final_res = [{
-            story_id: entity_list,
+            story_id: sorted_entity_list,
             'story_text': input_text
         }]
         logger.info(
