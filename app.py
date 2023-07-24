@@ -176,11 +176,11 @@ async def predict_ner(story: NerText,
         data = story.dict()['text']
         input_text, story_id = data[0][0].lower(), data[0][1]['story_id']
         predictions = predict_fn(ner_tokenizer, ner_neuron_model, ner_model_config, input_text)
-        # ner_results = extract_ner(predictions)
+        ner_results = extract_ner(predictions)
         logger.info(
             f"NER Bert Classifier: completed prediction  for story_id: {story_id} "
             f"in {(datetime.now() - dt).total_seconds()} Seconds")
-        return predictions
+        return ner_results
     except Exception as err:
         logger.error(
             f"NER Bert : Error occurred for story id :{story_id} "
