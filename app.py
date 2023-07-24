@@ -2,6 +2,7 @@ import logging
 import secrets
 import traceback
 import os
+import re
 from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -185,19 +186,20 @@ async def predict_ner(story: NerText,
             full_word = clean_entity(entity['entity'])
             start_index = 0
             while start_index != -1:
-                start_index = input_text.find(full_word, start_index)
-                if start_index != -1 and start_index not in entity_occurrences:
+                regex_pattern = r'\b' + re.escape(full_word) + r'\b'
+                match = re.search(regex_pattern, input_text[start_index:])
+                if match:
+                    start_index += match.start()
                     end_index = start_index + len(full_word)
                     entity_occurrences.add(start_index)
                     entity_list.append([
-                        [start_index,end_index],
+                        [start_index, end_index],
                         entity['label'],
                         full_word
                     ])
-
                     start_index = end_index  # Update the start_index to the next character after the current occurrence
                 else:
-                    break  # No more occurrences found, exit the loo
+                    break  # No more occurrences found, exit the loop
         sorted_entity_list = sorted(entity_list, key=lambda x: x[0][0])
         final_res = [{
             story_id: sorted_entity_list,
