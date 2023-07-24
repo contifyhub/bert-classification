@@ -184,10 +184,15 @@ async def predict_ner(story: NerText,
         for entity in location_entities:
             full_word = clean_entity(entity['entity'])
             start_index = 0
+            increment = 0
             while start_index != -1:
-                start_index = input_text.find(full_word + " " , start_index)
+                if start_index == 0:
+                    start_index = input_text.find(full_word + " " , start_index)
+                else:
+                    start_index = input_text.find(" " + full_word + " ", start_index)
+                    increment = 1
                 if start_index != -1 and start_index not in entity_occurrences:
-                    end_index = start_index + len(full_word)
+                    end_index = start_index + len(full_word)  + increment
                     entity_occurrences.add(start_index)
                     entity_list.append([
                         [start_index,end_index],
