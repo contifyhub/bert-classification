@@ -59,7 +59,7 @@ def extract_ner(predictions):
                 'entity': token,
                 'label': label[2:],
                 'start_index': token_data['start'],
-                'end_index': token_data['start']
+                'end_index': token_data['end']
             }
         elif label.startswith('B-') and "##" in token:
             if current_entity:
