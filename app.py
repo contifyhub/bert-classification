@@ -2,7 +2,6 @@ import logging
 import secrets
 import traceback
 import os
-import re
 from datetime import datetime
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -182,24 +181,31 @@ async def predict_ner(story: NerText,
                              entity['label'] in ['LOC', 'PER', 'ORG']]
         entity_occurrences = set()
         entity_list = []
+        words = input_text.split()
+
         for entity in location_entities:
             full_word = clean_entity(entity['entity'])
             start_index = 0
-            while start_index != -1:
-                regex_pattern = r'\b' + re.escape(full_word) + r'\b'
-                match = re.search(regex_pattern, input_text[start_index:])
-                if match:
-                    start_index += match.start()
-                    end_index = start_index + len(full_word)
-                    entity_occurrences.add(start_index)
-                    entity_list.append([
-                        [start_index, end_index],
-                        entity['label'],
-                        full_word
-                    ])
-                    start_index = end_index  # Update the start_index to the next character after the current occurrence
+            while start_index < len(words):
+                if words[start_index].lower() == full_word.lower():
+                    # Calculate the start and end indices in the original text based on the words list
+                    start_index_in_text = input_text.lower().find(
+                        full_word.lower(), start_index)
+                    end_index_in_text = start_index_in_text + len(full_word)
+
+                    if start_index_in_text not in entity_occurrences:
+                        entity_occurrences.add(start_index_in_text)
+                        entity_list.append([
+                            [start_index_in_text, end_index_in_text],
+                            entity['label'],
+                            full_word
+                        ])
+
+                    start_index = start_index + 1  # Move to the next word
                 else:
-                    break  # No more occurrences found, exit the loop
+                    start_index = start_index + 1  # Move to the next word
+
+        # Sort the entity_list by start_index_in_text
         sorted_entity_list = sorted(entity_list, key=lambda x: x[0][0])
         final_res = [{
             story_id: sorted_entity_list,
