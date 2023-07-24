@@ -25,12 +25,17 @@ def predict_fn(tokenizer, model, model_config, input_text):
     for label_id, token_id, offset in zip(
         preds.flatten()[1:-1], tokens.input_ids.flatten()[1:], tokens.offset_mapping.tolist()[0][1:]
     ):
+        token = tokenizer.decode(token_id)
+        label = model_config.id2label[label_id.item()]
+        if "[PAD]" == token or label == 'MISC':
+            break
+
         token_start, token_end = tuple(offset)  # Convert the 0-dimensional tensor to a tuple
         outputs.append(
             {
                 "index": index,
-                "token": tokenizer.decode(token_id),
-                "label": model_config.id2label[label_id.item()],
+                "token": token,
+                "label": label,
                 "start": token_start,
                 "end": token_end,
             }
