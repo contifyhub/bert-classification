@@ -56,14 +56,12 @@ def extract_ner(predictions):
         if label.startswith('B-') and "##" not in token:
             if current_entity:
                 current_entity['entity'] = clean_entity(current_entity['entity'])
-                current_entity['end_index'] = token_data['end']
                 ner_results.append(current_entity)
 
             current_entity = {
                 'entity': token,
                 'label': label[2:],
-                'start_index': token_data['start'],
-                'end_index': token_data['end']
+                'start_index': token_data['start']
             }
         elif label.startswith('B-') and "##" in token:
             if current_entity:
@@ -80,13 +78,11 @@ def extract_ner(predictions):
         else:
             if current_entity:
                 current_entity['entity'] = clean_entity(current_entity['entity'])
-                current_entity['end_index'] = token_data['end']
                 ner_results.append(current_entity)
                 current_entity = None
 
     if current_entity:
         current_entity['entity'] = clean_entity(current_entity['entity'])
-        current_entity['end_index'] = token_data['end']
         ner_results.append(current_entity)
 
     return ner_results
