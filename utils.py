@@ -27,6 +27,8 @@ def predict_fn(tokenizer, model, model_config, input_text):
     ):
         token = tokenizer.decode(token_id)
         label = model_config.id2label[label_id.item()]
+        import ipdb
+        ipdb.set_trace()
         if "[PAD]" in token or label == "MISC":
             continue
 
