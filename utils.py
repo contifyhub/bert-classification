@@ -27,8 +27,8 @@ def predict_fn(tokenizer, model, model_config, input_text):
     ):
         token = tokenizer.decode(token_id)
         label = model_config.id2label[label_id.item()]
-        if "[PAD]" == token or label == 'MISC':
-            break
+        if "[PAD]" == token or label == "MISC":
+            continue
 
         token_start, token_end = tuple(offset)  # Convert the 0-dimensional tensor to a tuple
         outputs.append(
@@ -36,8 +36,7 @@ def predict_fn(tokenizer, model, model_config, input_text):
                 "index": index,
                 "token": token,
                 "label": label,
-                "start": token_start,
-                "end": token_end,
+                "start": token_start
             }
         )
         index += 1
