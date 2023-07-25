@@ -12,6 +12,10 @@ class BertClassifierSettings(BaseSettings):
     TOPIC_MODEL_FILE_NAME = ''
     SUMMARY_MODEL_FILE_NAME = ''
     INDUSTRY_MODEL_FILE_NAME = ''
+    INF_TOPIC_MODEL_FILE_NAME = ''
+    INF_INDUSTRY_MODEL_FILE_NAME = ''
+    AWS_NEURON_TRACED_WEIGHTS_NAME = ''
+    NER_MODEL_DIR = ''
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
