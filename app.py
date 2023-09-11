@@ -48,6 +48,13 @@ def get_bert_classifier():
     ner_model_config = AutoConfig.from_pretrained(model_dir)
     return industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer, ner_tokenizer, ner_neuron_model, ner_model_config
 
+@lru_cache()
+def get_custom_tag():
+    custom_tag_model_mapping = {
+        13: settings.INF_TOPIC_MODEL_FILE_NAME
+    }
+
+    return custom_tag_model_mapping
 
 
 
@@ -80,7 +87,7 @@ def is_authenticated_user(
 
 
 @app.post('/predict/topic/')
-async def predict_industry(story: BertText,
+async def predict_topic(story: BertText,
                         auth_status: int = Depends(is_authenticated_user)):
     """This api is used to tag Industry from Text.
 
@@ -188,6 +195,50 @@ async def predict_ner(story: NerText,
     except Exception as err:
         logger.error(
             f"NER Bert : Error occurred for story id :{story_id} "
+            f" Error: {err} , Traceback: {traceback.format_exc()}")
+
+
+@app.post('/predict/custom_tag/')
+async def predict_topic(story: BertText,
+                        auth_status: int = Depends(is_authenticated_user)):
+    """This api is used to tag Custom Tag from Text for different clients.
+
+    params: story: BertText
+    Return: Tagged Entities
+    """
+    story_id = ""
+    try:
+        dt = datetime.now()
+        data = story.dict()['story']
+        input_text, story_id = data['story_text'], data['story_id']
+        max_length = 128
+        encoding = topic_tokenizer.encode_plus(
+            input_text,
+            max_length=max_length,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt",
+        )
+        example_inputs_paraphrase = (
+            encoding["input_ids"],
+            encoding["attention_mask"],
+            encoding["token_type_ids"],
+        )
+        logits = topic_neuron_model(*example_inputs_paraphrase)[0][0]
+        sigmoid = torch.nn.Sigmoid()
+        probs = sigmoid(logits.squeeze().cpu())
+        predictions = np.zeros(probs.shape)
+        predictions[np.where(probs >= 0.5)] = 1
+        predicted_labels = [TOPIC_CLASSES[idx] for idx, label in
+                            enumerate(predictions) if label == 1]
+        output_labels = {'predicted_tags': predicted_labels, "story_id": story_id}
+        logger.info(
+            f"Topic Bert Classifier: completed prediction  for story_id: {story_id} "
+            f"in {(datetime.now() - dt).total_seconds()} Seconds")
+        return output_labels
+    except Exception as err:
+        logger.error(
+            f"Topic Bert Classifier: Error occurred for story id :{story_id} "
             f" Error: {err} , Traceback: {traceback.format_exc()}")
 
 

@@ -133,4 +133,8 @@ TOPIC_CLASSES = [
  '38', '26', '390', '35', '388', '386'
 ]
 
+custom_tag_model_mapping = {
+ 13:settings.INF_TOPIC_MODEL_FILE_NAME
+}
+
 
