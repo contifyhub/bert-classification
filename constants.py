@@ -1,4 +1,31 @@
+import config
+import os
+from functools import lru_cache
+from transformers import AutoConfig
+
+
+# Import the settings from your configuration module
+@lru_cache
+def get_settings():
+    # This function returns the settings defined in config.BertClassifierSettings
+    return config.BertClassifierSettings()
+
+
+# Call get_settings using lru_cache decorator to cache the result
+SETTINGS = get_settings()
+
+# Define prediction thresholds for different categories
+# These thresholds are used for classification confidence level
+# Adjust these thresholds based on your classification needs
 INDUSTRY_PREDICTION_THRESHOLD = 0.7
+TOPIC_PREDICTION_THRESHOLD = 0.7
+CUSTOM_TAG_PREDICTION_THRESHOLD = 0.7
+BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
+
+
+# Define root and base paths
+ROOT_DIR = os.path.join(".")
+CUSTOM_TAG_BASE_PATH = "{}/custom_tags/".format(ROOT_DIR)
 
 # contify's custom industry to standard industry mapping
 INDUSTRY_MAPPING = {98636: 622,
@@ -111,30 +138,14 @@ INDUSTRY_MAPPING = {98636: 622,
  98714: 375,
  98727: 369}
 
-INDUSTRY_CLASSES = [
- '98657', '98663', '98658', '98659', '98689', '98691', '98760', '98762',
- '98753', '98756', '98745', '98739', '98742', '98746', '98747', '98661',
- '98706', '98708', '98662', '98758', '98636', '98639', '98664', '98666',
- '98720', '98718', '98637', '98660', '98649', '98651', '98669', '98650',
- '98707', '98719', '98640', '98700', '98665', '98641', '98648', '98741',
- '98738', '98732', '98757', '98690', '98752', '98750', '98709', '98653',
- '98654', '98668', '98763', '98761', '98672', '98671', '98722', '98655',
- '98735', '98645', '98646', '98725', '98727', '98673', '98728', '98733',
- '98656', '98692', '98695', '98734', '98670', '98755', '98687', '98744',
- '98638', '98682', '98678', '98759', '98683', '98686', '98723', '98713',
- '98710', '98754', '98699', '98674', '98676', '98680', '98684', '98711',
- '98681', '98647', '98677', '98667', '98685', '98698', '98697', '98675',
- '98740', '98696', '98714', '98748', '98749', '98693', '98743', '98716',
- '98688'
-]
-TOPIC_CLASSES = [
- '5', '18', '19', '17', '385', '20', '8', '23', '6', '21', '7', '250', '399',
- '308', '9', '398', '389', '394', '383', '391', '382', '251', '194', '252',
- '38', '26', '390', '35', '388', '386'
-]
+INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.INDUSTRY_MODEL_FILE_NAME).id2label.values())
+TOPIC_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.TOPIC_MODEL_FILE_NAME).id2label.values())
 
-custom_tag_model_mapping = {
- 13:settings.INF_TOPIC_MODEL_FILE_NAME
+CUSTOM_TAG_CLASSES = {
+    214: AutoConfig.from_pretrained(os.path.join(
+     CUSTOM_TAG_BASE_PATH,
+     os.path.join(str(214), SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING[214]['tokenizer']))
+    ).id2label.values()
 }
 
 
