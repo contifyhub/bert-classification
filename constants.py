@@ -1,6 +1,7 @@
 import config
 import os
 from functools import lru_cache
+import json
 from transformers import AutoConfig
 
 
@@ -142,10 +143,11 @@ INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.INDUSTRY_MODEL_FILE_
 TOPIC_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.TOPIC_MODEL_FILE_NAME).id2label.values())
 
 CUSTOM_TAG_CLASSES = {
-    214: AutoConfig.from_pretrained(os.path.join(
+    214: list(AutoConfig.from_pretrained(os.path.join(
      CUSTOM_TAG_BASE_PATH,
-     os.path.join(str(214), SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING[str(214)]['tokenizer']))
-    ).id2label.values()
+     os.path.join(str(214), json.loads(SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING)[str(214)]['tokenizer'])
+    )
+    ).id2label.values())
 }
 
 
