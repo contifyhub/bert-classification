@@ -370,7 +370,7 @@ async def predict_custom_tag(story: BertText,
         )
 
         # Get logits from the client-specific custom tag model
-        logits = custom_tag_model_map[client_id]["model"](*example_inputs_paraphrase)[0][0]
+        logits = custom_tag_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0][0]
         sigmoid = torch.nn.Sigmoid()
         probs = sigmoid(logits.squeeze().cpu())
         predictions = np.zeros(probs.shape)
