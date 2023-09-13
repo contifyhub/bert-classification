@@ -13,7 +13,8 @@ import config
 from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
-    BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD
+    BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
+    BUSINESS_EVENT_CLASSES
 )
 from serializers import BertText, NerText
 import numpy as np
@@ -355,7 +356,7 @@ async def predict_custom_tag(story: BertText,
         max_length = 128
 
         # Tokenize the input text using the client-specific tokenizer
-        encoding = custom_tag_model_map[client_id]["tokenizer"].encode_plus(
+        encoding = custom_tag_model_map[str(client_id)]["tokenizer"].encode_plus(
             input_text,
             max_length=max_length,
             padding="max_length",
@@ -427,17 +428,16 @@ async def predict_business_event(story: BertText,
         )
 
         # Get logits from the industry_neuron_model
-        logits = industry_neuron_model(*example_inputs_paraphrase)[0][0]
+        logits = business_event_neuron_model(*example_inputs_paraphrase)[0][0]
         sigmoid = torch.nn.Sigmoid()
         probs = sigmoid(logits.squeeze().cpu())
         predictions = np.zeros(probs.shape)
         predictions[np.where(probs >= BUSINESS_EVENT_PREDICTION_THRESHOLD)] = 1
 
-        # Map predicted labels to industry tags
-        predicted_labels = [INDUSTRY_CLASSES[idx] for idx, label in
+        # Map predicted labels to custom tags for the client
+        predicted_labels = [BUSINESS_EVENT_CLASSES[idx] for idx, label in
                             enumerate(predictions) if label == 1]
-        industry_tags = [INDUSTRY_MAPPING[int(i)] for i in predicted_labels]
-        output_labels = {'predicted_tags': industry_tags, "story_id": story_id}
+        output_labels = {'predicted_tags': predicted_labels, "story_id": story_id}
 
         # Log the prediction completion
         logger.info(

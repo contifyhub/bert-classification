@@ -141,6 +141,8 @@ INDUSTRY_MAPPING = {98636: 622,
 
 INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.INDUSTRY_MODEL_FILE_NAME).id2label.values())
 TOPIC_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.TOPIC_MODEL_FILE_NAME).id2label.values())
+BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.BUSINESS_EVENT_MODEL_FILE_NAME).id2label.values())
+
 
 CUSTOM_TAG_CLASSES = {
     214: list(AutoConfig.from_pretrained(os.path.join(
