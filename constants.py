@@ -1,4 +1,32 @@
+import config
+import os
+from functools import lru_cache
+import json
+from transformers import AutoConfig
+
+
+# Import the settings from your configuration module
+@lru_cache
+def get_settings():
+    # This function returns the settings defined in config.BertClassifierSettings
+    return config.BertClassifierSettings()
+
+
+# Call get_settings using lru_cache decorator to cache the result
+SETTINGS = get_settings()
+
+# Define prediction thresholds for different categories
+# These thresholds are used for classification confidence level
+# Adjust these thresholds based on your classification needs
 INDUSTRY_PREDICTION_THRESHOLD = 0.7
+TOPIC_PREDICTION_THRESHOLD = 0.7
+CUSTOM_TAG_PREDICTION_THRESHOLD = 0.7
+BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
+
+
+# Define root and base paths
+ROOT_DIR = os.path.join(".")
+CUSTOM_TAG_BASE_PATH = "{}/custom_tags/".format(ROOT_DIR)
 
 # contify's custom industry to standard industry mapping
 INDUSTRY_MAPPING = {98636: 622,
@@ -110,5 +138,18 @@ INDUSTRY_MAPPING = {98636: 622,
  98677: 394,
  98714: 375,
  98727: 369}
+
+INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.INDUSTRY_MODEL_FILE_NAME).id2label.values())
+TOPIC_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.TOPIC_MODEL_FILE_NAME).id2label.values())
+BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.BUSINESS_EVENT_MODEL_FILE_NAME).id2label.values())
+
+
+CUSTOM_TAG_CLASSES = {
+    214: list(AutoConfig.from_pretrained(os.path.join(
+     CUSTOM_TAG_BASE_PATH,
+     os.path.join(str(214), json.loads(SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING)[str(214)]['tokenizer'])
+    )
+    ).id2label.values())
+}
 
 
