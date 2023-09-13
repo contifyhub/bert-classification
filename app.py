@@ -1,5 +1,6 @@
 import logging
 import secrets
+import json
 import traceback
 import os
 
@@ -115,7 +116,7 @@ def get_bert_classifier():
     # Create a defaultdict to store custom tag models
     custom_tag_model_map = {}
     # Loading all custom tag models and binarizers for different clients
-    for client_id, model_dict in SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING.items():
+    for client_id, model_dict in json.loads(SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING).items():
 
         custom_tag_model, custom_tag_binarizer = load_custom_tag_models(client_id, model_dict)
 
