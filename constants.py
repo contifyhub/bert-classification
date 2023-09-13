@@ -144,7 +144,7 @@ TOPIC_CLASSES = list(AutoConfig.from_pretrained(SETTINGS.TOPIC_MODEL_FILE_NAME).
 CUSTOM_TAG_CLASSES = {
     214: AutoConfig.from_pretrained(os.path.join(
      CUSTOM_TAG_BASE_PATH,
-     os.path.join(str(214), SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING[214]['tokenizer']))
+     os.path.join(str(214), SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING[str(214)]['tokenizer']))
     ).id2label.values()
 }
 
