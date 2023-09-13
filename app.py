@@ -41,6 +41,10 @@ security = HTTPBasic()
 logger = logging.getLogger(__name__)
 
 
+@lru_cache()
+def get_settings():
+    return config.BertClassifierSettings()
+
 # Function to load custom tag models and binarizers
 def load_custom_tag_models(client_id, model_dict):
     """
@@ -139,7 +143,7 @@ def get_bert_classifier():
 
 def is_authenticated_user(
         credentials: HTTPBasicCredentials = Depends(security),
-        settings: config.BertClassifierSettings = Depends(SETTINGS)
+        settings: config.BertClassifierSettings = Depends(get_settings)
 ):
     """
     Function to authenticate a user based on HTTP Basic Authentication.
