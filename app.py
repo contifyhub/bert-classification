@@ -14,7 +14,7 @@ from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
     BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING
 )
 from serializers import BertText, NerText
 import numpy as np
@@ -437,7 +437,8 @@ async def predict_business_event(story: BertText,
         # Map predicted labels to custom tags for the client
         predicted_labels = [BUSINESS_EVENT_CLASSES[idx] for idx, label in
                             enumerate(predictions) if label == 1]
-        output_labels = {'predicted_tags': predicted_labels, "story_id": story_id}
+        business_event_tags = [BUSINESS_EVENT_MAPPING[int(i)] for i in predicted_labels]
+        output_labels = {'predicted_tags': business_event_tags, "story_id": story_id}
 
         # Log the prediction completion
         logger.info(
