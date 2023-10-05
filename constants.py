@@ -210,7 +210,7 @@ BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH,
 
 CUSTOM_TAG_CLASSES = {
     214: list(AutoConfig.from_pretrained(os.path.join(
-     CUSTOM_TAG_BASE_PATH,
+     BERT_CUSTOM_TAG_BASE_PATH,
      os.path.join(str(214), json.loads(SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING)[str(214)]['tokenizer'])
     )
     ).id2label.values())
