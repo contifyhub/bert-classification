@@ -201,9 +201,9 @@ INDUSTRY_MAPPING = {98636: 622,
  98727: 369}
 
 
-INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INF_INDUSTRY_MODEL_FILE_NAME)).id2label.values())
-TOPIC_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INF_TOPIC_MODEL_FILE_NAME)).id2label.values())
-BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INF_BUSINESS_EVENT_MODEL_FILE_NAME)).id2label.values())
+INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INDUSTRY_MODEL_FILE_NAME)).id2label.values())
+TOPIC_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.TOPIC_MODEL_FILE_NAME)).id2label.values())
+BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.BUSINESS_EVENT_MODEL_FILE_NAME)).id2label.values())
 
 
 CUSTOM_TAG_CLASSES = {
