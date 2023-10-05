@@ -45,9 +45,8 @@ security = HTTPBasic()
 logger = logging.getLogger(__name__)
 
 
-
 ROOT_DIR = os.path.join(".")
-BASE_PATH = "{}/classified_data/".format(ROOT_DIR)
+BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
 
 @lru_cache()
 def get_settings():
@@ -94,7 +93,7 @@ def get_ml_classifier():
             if not model_file:
                 continue
             classified_model_map[model_type]['models'].append(joblib.load(
-                os.path.join(BASE_PATH, os.path.join(model_type, model_file))
+                os.path.join(CUSTOM_TAG_BASE_PATH, os.path.join(model_type, model_file))
             ))
 
             binarizer_file = model_dict.get('binarizer_file')
@@ -125,33 +124,28 @@ def get_bert_classifier():
         - business_event_tokenizer (AutoTokenizer): The business event-specific BERT tokenizer.
         - custom_tag_model_map (dict): A dictionary mapping client IDs to custom tag models and binarizers.
     """
-    # Load industry and topic models and tokenizers
-    industry_neuron_model = torch.jit.load(f"{SETTINGS.INF_INDUSTRY_MODEL_FILE_NAME}")
-    industry_tokenizer  = AutoTokenizer.from_pretrained(
-        f"{SETTINGS.INDUSTRY_MODEL_FILE_NAME}/")
+    industry_neuron_model = torch.jit.load(f"{os.path.join(BASE_PATH, SETTINGS.INF_INDUSTRY_MODEL_FILE_NAME)}")
+    industry_tokenizer = AutoTokenizer.from_pretrained(f"{os.path.join(BASE_PATH, SETTINGS.INDUSTRY_MODEL_FILE_NAME)}/")
 
     # Load topic models and tokenizers
-    topic_neuron_model = torch.jit.load(f"{SETTINGS.INF_TOPIC_MODEL_FILE_NAME}")
-    topic_tokenizer =  AutoTokenizer.from_pretrained(
-        f"{SETTINGS.TOPIC_MODEL_FILE_NAME}/")
+    topic_neuron_model = torch.jit.load(f"{os.path.join(BASE_PATH, SETTINGS.INF_TOPIC_MODEL_FILE_NAME)}")
+    topic_tokenizer = AutoTokenizer.from_pretrained(f"{os.path.join(BASE_PATH, SETTINGS.TOPIC_MODEL_FILE_NAME)}/")
 
     # Load NER models and tokenizers
-    ner_model_dir = f"{SETTINGS.NER_MODEL_DIR}"
+    ner_model_dir = f"{os.path.join(BASE_PATH, SETTINGS.NER_MODEL_DIR)}"
     ner_tokenizer = AutoTokenizer.from_pretrained(ner_model_dir)
-    ner_neuron_model = torch.jit.load(
-        os.path.join(ner_model_dir, f"{SETTINGS.AWS_NEURON_TRACED_WEIGHTS_NAME}"))
+    ner_neuron_model = torch.jit.load(os.path.join(ner_model_dir, f"{SETTINGS.AWS_NEURON_TRACED_WEIGHTS_NAME}"))
     ner_model_config = AutoConfig.from_pretrained(ner_model_dir)
 
     # Load business event models and tokenizers
-    business_event_neuron_model = torch.jit.load(f"{SETTINGS.INF_BUSINESS_EVENT_MODEL_FILE_NAME}")
+    business_event_neuron_model = torch.jit.load(f"{os.path.join(BASE_PATH, SETTINGS.INF_BUSINESS_EVENT_MODEL_FILE_NAME)}")
     business_event_tokenizer = AutoTokenizer.from_pretrained(
-        f"{SETTINGS.BUSINESS_EVENT_MODEL_FILE_NAME}/")
+        f"{os.path.join(BASE_PATH, SETTINGS.BUSINESS_EVENT_MODEL_FILE_NAME)}/")
 
     # Create a defaultdict to store custom tag models
     custom_tag_model_map = {}
     # Loading all custom tag models and binarizers for different clients
     for client_id, model_dict in json.loads(SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING).items():
-
         custom_tag_model, custom_tag_binarizer = load_custom_tag_models(client_id, model_dict)
 
         custom_tag_model_map[client_id] = {
@@ -492,13 +486,22 @@ async def predict_custom_tags(client_id: str, story: ArticleText,
             client_id: id of the client
     Return: predictions
     """
-    data = story.dict()
-    text_list = data['text']
-    ct_models_list = classified_model_map[client_id]
-    predictions = predict_classes(ct_models_list, text_list, multilabel=True)
-    return {
-        'result': predictions
-    }
+    try:
+        dt = datetime.now()
+        data = story.dict()
+        text_list = data['text']
+        ct_models_list = classified_model_map[client_id]
+        predictions = predict_classes(ct_models_list, text_list, multilabel=True)
+        logger.info(
+            f"Custom Tag  Classifier: completed prediction for client_id: {client_id} "
+            f"in {(datetime.now() - dt).total_seconds()} seconds")
+        return {
+            'result': predictions
+        }
+    except Exception as err:
+        logger.error(
+            f"Custom Tag Classifier: Error occurred for client_id: {client_id} "
+            f"Error: {err}, Traceback: {traceback.format_exc()}")
 
 
 @app.post('/predict/reject/')
@@ -509,11 +512,19 @@ async def predict_reject(story: ArticleText,
     params: story: ArticleText
     Return: predictions
     """
-
-    data = story.dict()
-    text_list = data['text']
-    ct_models_list = classified_model_map['Reject']
-    predictions = predict_classes(ct_models_list, text_list)
-    return {
-        'result': predictions
-    }
+    try:
+        dt = datetime.now()
+        data = story.dict()
+        text_list = data['text']
+        ct_models_list = classified_model_map['Reject']
+        predictions = predict_classes(ct_models_list, text_list)
+        logger.info(
+            f"Reject: completed prediction for rejection"
+            f"in {(datetime.now() - dt).total_seconds()} seconds")
+        return {
+            'result': predictions
+        }
+    except Exception as err:
+        logger.error(
+            f"Reject: Error occurred for Rejection "
+            f"Error: {err}, Traceback: {traceback.format_exc()}")
