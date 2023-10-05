@@ -44,7 +44,7 @@ security = HTTPBasic()
 # Initialize the logger
 logger = logging.getLogger(__name__)
 
-classified_model_map = defaultdict(lambda: defaultdict(list))
+
 
 ROOT_DIR = os.path.join(".")
 BASE_PATH = "{}/classified_data/".format(ROOT_DIR)
@@ -87,6 +87,7 @@ def load_custom_tag_models(client_id, model_dict):
 
 
 def get_ml_classifier():
+    classified_model_map = defaultdict(lambda: defaultdict(list))
     for model_type in CLASSIFIED_MODELS:
         for model_dict in CLASSIFIED_MODELS[model_type]:
             model_file = model_dict.get('model_file')
@@ -102,6 +103,8 @@ def get_ml_classifier():
                     os.path.join(BASE_PATH,
                                  os.path.join(model_type, binarizer_file))
                 ))
+
+    return classified_model_map
 
 
 @lru_cache
@@ -166,6 +169,8 @@ def get_bert_classifier():
     ner_neuron_model, ner_model_config, business_event_neuron_model, business_event_tokenizer,
     custom_tag_model_map
 ) = get_bert_classifier()
+
+classified_model_map = get_ml_classifier()
 
 
 def is_authenticated_user(
