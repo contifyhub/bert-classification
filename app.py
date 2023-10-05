@@ -100,7 +100,7 @@ def get_ml_classifier():
             binarizer_file = model_dict.get('binarizer_file')
             if binarizer_file:
                 classified_model_map[model_type]['binarizer'].append(joblib.load(
-                    os.path.join(BASE_PATH,
+                    os.path.join(base_path,
                                  os.path.join(model_type, binarizer_file))
                 ))
 
