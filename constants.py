@@ -29,8 +29,9 @@ BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
 
 # Define root and base paths
 ROOT_DIR = os.path.join(".")
-CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/".format(ROOT_DIR)
-CLASSIFIER_TAG_BASE_PATH = "{}/ml_models/classified_data/".format(ROOT_DIR)
+BERT_CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/bert".format(ROOT_DIR)
+SK_BERT_CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/sk-learn".format(ROOT_DIR)
+REJECT_TAG_BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
 
 BUSINESS_EVENT_MAPPING = {
  98485: 2,

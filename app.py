@@ -15,9 +15,10 @@ from logging import config as logger_config
 import config
 from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
-    TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
+    TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, BERT_CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
     BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH, CLASSIFIER_TAG_BASE_PATH
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH, SK_BERT_CUSTOM_TAG_BASE_PATH,
+    REJECT_TAG_BASE_PATH
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -70,13 +71,13 @@ def load_custom_tag_models(client_id, model_dict):
         return None, None
 
     custom_tag_model = torch.jit.load(
-        os.path.join(CUSTOM_TAG_BASE_PATH, os.path.join(str(client_id), model_file))
+        os.path.join(BERT_CUSTOM_TAG_BASE_PATH, os.path.join(str(client_id), model_file))
     )
 
     binarizer = None
     if binarizer_file:
         binarizer = AutoTokenizer.from_pretrained(
-            os.path.join(CUSTOM_TAG_BASE_PATH, os.path.join(str(client_id), binarizer_file))
+            os.path.join(BERT_CUSTOM_TAG_BASE_PATH, os.path.join(str(client_id), binarizer_file))
         )
 
     return custom_tag_model, binarizer
@@ -85,12 +86,15 @@ def load_custom_tag_models(client_id, model_dict):
 def get_ml_classifier():
     classified_model_map = defaultdict(lambda: defaultdict(list))
     for model_type in CLASSIFIED_MODELS:
+        base_path = SK_BERT_CUSTOM_TAG_BASE_PATH
+        if model_type == "Reject":
+            base_path = REJECT_TAG_BASE_PATH
         for model_dict in CLASSIFIED_MODELS[model_type]:
             model_file = model_dict.get('model_file')
             if not model_file:
                 continue
             classified_model_map[model_type]['models'].append(joblib.load(
-                os.path.join(CLASSIFIER_TAG_BASE_PATH, os.path.join(model_type, model_file))
+                os.path.join(base_path, os.path.join(model_type, model_file))
             ))
 
             binarizer_file = model_dict.get('binarizer_file')
