@@ -5,6 +5,9 @@ import traceback
 import os
 
 from datetime import datetime
+from collections import defaultdict
+
+import joblib
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from logging import config as logger_config
@@ -14,16 +17,16 @@ from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
     BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS
 )
-from serializers import BertText, NerText
+from serializers import BertText, NerText, ArticleText
 import numpy as np
 import torch
 from functools import lru_cache
 from transformers import AutoTokenizer, AutoConfig
 import torch.neuron
 
-from utils import extract_ner, predict_fn
+from utils import extract_ner, predict_fn, predict_classes
 
 # Set the number of CPU cores to use for AWS Neuron
 num_cores = 0  # 0 i.e. all cores,  max 4 core available for inf1
@@ -41,10 +44,15 @@ security = HTTPBasic()
 # Initialize the logger
 logger = logging.getLogger(__name__)
 
+classified_model_map = defaultdict(lambda: defaultdict(list))
+
+ROOT_DIR = os.path.join(".")
+BASE_PATH = "{}/classified_data/".format(ROOT_DIR)
 
 @lru_cache()
 def get_settings():
     return config.BertClassifierSettings()
+
 
 # Function to load custom tag models and binarizers
 def load_custom_tag_models(client_id, model_dict):
@@ -76,6 +84,24 @@ def load_custom_tag_models(client_id, model_dict):
         )
 
     return custom_tag_model, binarizer
+
+
+def get_ml_classifier():
+    for model_type in CLASSIFIED_MODELS:
+        for model_dict in CLASSIFIED_MODELS[model_type]:
+            model_file = model_dict.get('model_file')
+            if not model_file:
+                continue
+            classified_model_map[model_type]['models'].append(joblib.load(
+                os.path.join(BASE_PATH, os.path.join(model_type, model_file))
+            ))
+
+            binarizer_file = model_dict.get('binarizer_file')
+            if binarizer_file:
+                classified_model_map[model_type]['binarizer'].append(joblib.load(
+                    os.path.join(BASE_PATH,
+                                 os.path.join(model_type, binarizer_file))
+                ))
 
 
 @lru_cache
@@ -452,4 +478,37 @@ async def predict_business_event(story: BertText,
             f"Error: {err}, Traceback: {traceback.format_exc()}")
 
 
+@app.post('/predict/customtags/{client_id}/')
+async def predict_custom_tags(client_id: str, story: ArticleText,
+                              auth_status: int = Depends(is_authenticated_user)):
+    """This api is used to attach Customtags to ArticleText.
 
+    params: story: ArticleText
+            client_id: id of the client
+    Return: predictions
+    """
+    data = story.dict()
+    text_list = data['text']
+    ct_models_list = classified_model_map[client_id]
+    predictions = predict_classes(ct_models_list, text_list, multilabel=True)
+    return {
+        'result': predictions
+    }
+
+
+@app.post('/predict/reject/')
+async def predict_reject(story: ArticleText,
+                         auth_status: int = Depends(is_authenticated_user)):
+    """This api is used to  reject ArticleText.
+
+    params: story: ArticleText
+    Return: predictions
+    """
+
+    data = story.dict()
+    text_list = data['text']
+    ct_models_list = classified_model_map['Reject']
+    predictions = predict_classes(ct_models_list, text_list)
+    return {
+        'result': predictions
+    }

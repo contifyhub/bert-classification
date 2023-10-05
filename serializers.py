@@ -17,3 +17,7 @@ class SummaryText(BaseModel):
 class NerText(BaseModel):
     # A list of text samples for NER processing
     text: list
+
+
+class ArticleText(BaseModel):
+    text: list

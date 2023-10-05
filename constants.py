@@ -211,3 +211,14 @@ CUSTOM_TAG_CLASSES = {
 }
 
 
+CLASSIFIED_MODELS = {
+    'Reject': [
+        {'model_file': 'SI_Non_Business_Reject.pkl'}
+    ],
+    '135': [
+        {
+            'model_file': 'custom_tags_model_135_en_1.pkl',
+            'binarizer_file': 'custom_tags_binarizer_135_en_1.pkl'
+        }
+    ]
+}

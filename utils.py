@@ -1,3 +1,4 @@
+import itertools
 import torch
 import numpy as np
 
@@ -131,6 +132,33 @@ def extract_ner(predictions):
         ner_results.append(current_entity)
 
     return ner_results
+
+
+def predict_classes(model_map, text_list, multilabel=False):
+    """This function is used to predict classes.
+
+       params: model_map
+               text_list
+               multilabel:Default(False)
+       Return: predictions
+       """
+    prediction = list()
+    classification_models = model_map['models']
+    binarizer_model = model_map.get('binarizer', [None])
+    for classification_model, binarizer_model in zip(
+            *[classification_models, binarizer_model]):
+        pred = classification_model.predict(text_list)
+        if multilabel:
+            pred = binarizer_model.inverse_transform(pred)
+        else:
+            pred = pred.tolist()
+        prediction.append(pred)
+    if multilabel:
+        final_predictions = [list(map(int, list(itertools.chain(*p))))
+                             for p in zip(*prediction)]
+    else:
+        final_predictions = [list(pred_tup) for pred_tup in zip(*prediction)]
+    return final_predictions
 
 
 
