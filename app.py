@@ -17,7 +17,7 @@ from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
     BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -44,9 +44,6 @@ security = HTTPBasic()
 # Initialize the logger
 logger = logging.getLogger(__name__)
 
-
-ROOT_DIR = os.path.join(".")
-BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
 
 @lru_cache()
 def get_settings():

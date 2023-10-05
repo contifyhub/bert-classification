@@ -5,6 +5,9 @@ import json
 from transformers import AutoConfig
 
 
+ROOT_DIR = os.path.join(".")
+BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
+
 # Import the settings from your configuration module
 @lru_cache
 def get_settings():
@@ -196,7 +199,8 @@ INDUSTRY_MAPPING = {98636: 622,
  98677: 394,
  98714: 375,
  98727: 369}
-BASE_PATH = ""
+
+
 INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INF_INDUSTRY_MODEL_FILE_NAME)).id2label.values())
 TOPIC_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INF_TOPIC_MODEL_FILE_NAME)).id2label.values())
 BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INF_BUSINESS_EVENT_MODEL_FILE_NAME)).id2label.values())
