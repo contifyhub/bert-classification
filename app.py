@@ -17,7 +17,7 @@ from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
     BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH, CLASSIFIER_TAG_BASE_PATH
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -90,7 +90,7 @@ def get_ml_classifier():
             if not model_file:
                 continue
             classified_model_map[model_type]['models'].append(joblib.load(
-                os.path.join(CUSTOM_TAG_BASE_PATH, os.path.join(model_type, model_file))
+                os.path.join(CLASSIFIER_TAG_BASE_PATH, os.path.join(model_type, model_file))
             ))
 
             binarizer_file = model_dict.get('binarizer_file')
