@@ -7,13 +7,13 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from logging import config as logger_config
 import config
 from constants import INDUSTRY_MAPPING, INDUSTRY_PREDICTION_THRESHOLD
-from serializers import BertText
+from serializers import BertText, SummaryText
 import numpy as np
 import torch
 from functools import lru_cache
 from transformers import (AutoModelForSequenceClassification,
                           Trainer,
-                          AutoTokenizer)
+                          AutoTokenizer, AutoModelForSeq2SeqLM)
 
 @lru_cache()
 def get_settings():
@@ -24,23 +24,26 @@ settings = get_settings()
 logger_config.dictConfig(settings.LOGGING)
 
 
-@lru_cache()
-def get_industry_bert_classifier():
-    torch.cuda.empty_cache()
-    industry_model = AutoModelForSequenceClassification.from_pretrained(
-        f"{settings.INDUSTRY_MODEL_FILE_NAME}/")
-    industry_trainer = Trainer(model=industry_model)
-    industry_tokenizer = AutoTokenizer.from_pretrained(
-        f"{settings.INDUSTRY_MODEL_FILE_NAME}/")
-    return industry_model, industry_trainer, industry_tokenizer
 
 
-model, trainer, tokenizer = get_industry_bert_classifier()
+
 app = FastAPI(docs_url=None, redoc_url=None)
 security = HTTPBasic()
 
 logger = logging.getLogger(__name__)
 
+@lru_cache()
+def get_bert_summarizer():
+    summary_tokenizer = AutoTokenizer.from_pretrained(
+        f"./{settings.SUMMARY_MODEL_FILE_NAME}"
+    )
+    summary_model = AutoModelForSeq2SeqLM.from_pretrained(
+        f"./{settings.SUMMARY_MODEL_FILE_NAME}"
+        f"")
+    return summary_tokenizer, summary_model
+
+
+summarization_tokenizer, summarization_model = get_bert_summarizer()
 
 def is_authenticated_user(
         credentials: HTTPBasicCredentials = Depends(security),
@@ -62,37 +65,39 @@ def is_authenticated_user(
         )
     return True
 
-
-@app.post('/predict/industry/')
-async def predict_industry(story: BertText,
-                        auth_status: int = Depends(is_authenticated_user)):
-    """This api is used to tag Industry from Text.
-
-    params: story: BertText
-    Return: Tagged Entities
+@app.post('/predict/summarize_text/')
+async def summarize_text(story: SummaryText,
+                         auth_status: int = Depends(is_authenticated_user)):
+    """This tes-api is used to tag ner from Text.
+    params: story: SummaryText
+    Return: Summarized text
     """
-    story_id = ""
+    summary_text = ""
     try:
-        dt = datetime.now()
-        data = story.dict()['story']
-        input_text, story_id = data['story_text'], data['story_id']
-        encoding = tokenizer(input_text, return_tensors="pt", truncation=True)
-        encoding = {k: v.to(trainer.model.device) for k, v in encoding.items()}
-        outputs = trainer.model(**encoding)
-        logits = outputs.logits
-        sigmoid = torch.nn.Sigmoid()
-        probs = sigmoid(logits.squeeze().cpu())
-        predictions = np.zeros(probs.shape)
-        predictions[np.where(probs >= INDUSTRY_PREDICTION_THRESHOLD)] = 1
-        industry_labels = [model.config.id2label[idx] for idx, label in
-                       enumerate(predictions) if label == 1]
-        industry_tags = [INDUSTRY_MAPPING[int(i)] for i in industry_labels]
-        output_labels = {'predicted_tags': industry_tags, "story_id": story_id}
-        logger.info(
-            f"Industry Bert Classifier: completed prediction  for story_id: {story_id} "
-            f"in {(datetime.now() - dt).total_seconds()} Seconds")
-        return output_labels
+        data = story.dict()
+        data_dict = data['data']
+        summary_text = data_dict["text"]
+        max_len = data_dict["max_len"]
+        no_of_beams = data_dict["no_of_beams"]
+        inputs = summarization_tokenizer(
+            [summary_text],
+            max_length=1024,
+            return_tensors="pt",
+            truncation=True
+        )
+        # Generate Summary
+        summary_ids = summarization_model.generate(inputs["input_ids"],
+                                                   num_beams=no_of_beams,
+                                                   min_length=0,
+                                                   max_length=max_len)
+        bert_output = summarization_tokenizer.batch_decode(
+            summary_ids,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False
+            )
+        return bert_output[0]
+
     except Exception as err:
-        logger.error(
-            f"Industry Bert Classifier: Error occurred for story id :{story_id} "
-            f" Error: {err} , Traceback: {traceback.format_exc()}")
+        logger.info(f"Ner Bert: Error occurred for story {summary_text} "
+                    f" Error: {err} , Traceback: {traceback.format_exc()}")
+
