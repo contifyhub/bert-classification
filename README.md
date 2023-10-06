@@ -53,6 +53,10 @@ To access the API, you need to authenticate using HTTP Basic Authentication. Pro
 
 - **/predict/business_event/**: Predict business events from text.
 
+- **/predict/customtags/client_id**: Tag custom tags from text for different clients.
+
+- **/predict/reject/**: Predict business and non-business from text.
+
 
 
 
