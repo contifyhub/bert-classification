@@ -17,7 +17,7 @@ from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
     TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, BERT_CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
     BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH, SK_BERT_CUSTOM_TAG_BASE_PATH,
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH, SK_CUSTOM_TAG_BASE_PATH,
     REJECT_TAG_BASE_PATH
 )
 from serializers import BertText, NerText, ArticleText
@@ -86,7 +86,7 @@ def load_custom_tag_models(client_id, model_dict):
 def get_ml_classifier():
     classified_model_map = defaultdict(lambda: defaultdict(list))
     for model_type in CLASSIFIED_MODELS:
-        base_path = SK_BERT_CUSTOM_TAG_BASE_PATH
+        base_path = SK_CUSTOM_TAG_BASE_PATH
         if model_type == "Reject":
             base_path = REJECT_TAG_BASE_PATH
         for model_dict in CLASSIFIED_MODELS[model_type]:
