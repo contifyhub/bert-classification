@@ -7,6 +7,7 @@ ROOT_DIR = os.path.join("..")
 class BertClassifierSettings(BaseSettings):
     """
     Settings class for BertClassifier configuration.
+    NOTE:  File name starts with INF is only compatible with AWS INF instances.
     """
     BERT_CLASSIFICATION_USERNAME: str = ''
     BERT_CLASSIFICATION_PASSWORD: str = ''
