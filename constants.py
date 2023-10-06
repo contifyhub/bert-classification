@@ -25,6 +25,10 @@ INDUSTRY_PREDICTION_THRESHOLD = 0.7
 TOPIC_PREDICTION_THRESHOLD = 0.7
 CUSTOM_TAG_PREDICTION_THRESHOLD = 0.7
 BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
+# MAX_LEN is maximum length in number of tokens for the inputs to the
+# transformer model. When the tokenizer is loaded with from_pretrained,
+# this will be set to the value stored for the associated model
+MAX_LEN = 512
 
 
 # Define root and base paths

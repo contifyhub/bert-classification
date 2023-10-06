@@ -2,6 +2,8 @@ import itertools
 import torch
 import numpy as np
 
+from constants import MAX_LEN
+
 
 def predict_fn(tokenizer, model, model_config, input_text):
     """
@@ -20,7 +22,7 @@ def predict_fn(tokenizer, model, model_config, input_text):
     tokens = tokenizer(
         input_text,
         return_tensors="pt",
-        max_length=512,
+        max_length=MAX_LEN,
         padding="max_length",
         truncation=True,
         return_offsets_mapping=True,  # Request offset mapping
