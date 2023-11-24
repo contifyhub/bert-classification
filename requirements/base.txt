@@ -3,9 +3,11 @@ fastapi==0.70.0
 gunicorn==20.1.0
 Cython==0.29.26
 ipython==7.30.0
+joblib==0.11
 pydantic==1.8.2
 python-dotenv==0.19.2
 uvicorn==0.15.0
+scikit-learn==0.22.1
 transformers==4.21.2
 urllib3==1.26.12
 #torch==1.11.0+cu113 torchvision==0.12.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html(install manually)
