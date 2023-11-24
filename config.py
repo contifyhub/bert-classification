@@ -31,6 +31,8 @@ class BertClassifierSettings(BaseSettings):
 
     CUSTOM_TAG_CLIENT_MODEL_MAPPING = ''  # Mapping for custom tag client models
 
+    CLIENT_STORY_REJECT_MODEL_MAPPING = ''  # Mapping for custom tag client models
+
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,

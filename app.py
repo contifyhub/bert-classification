@@ -15,10 +15,14 @@ from logging import config as logger_config
 import config
 from constants import (
     INDUSTRY_CLASSES, INDUSTRY_MAPPING,
-    TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS, BERT_CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
-    BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD, TOPIC_PREDICTION_THRESHOLD,
-    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS, BASE_PATH, SK_LRN_CUSTOM_TAG_BASE_PATH,
-    REJECT_TAG_BASE_PATH
+    TOPIC_CLASSES, INDUSTRY_PREDICTION_THRESHOLD, SETTINGS,
+    BERT_CUSTOM_TAG_BASE_PATH, CUSTOM_TAG_CLASSES,
+    BUSINESS_EVENT_PREDICTION_THRESHOLD, CUSTOM_TAG_PREDICTION_THRESHOLD,
+    TOPIC_PREDICTION_THRESHOLD,
+    BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS,
+    BASE_PATH, SK_LRN_CUSTOM_TAG_BASE_PATH,
+    REJECT_TAG_BASE_PATH, BERT_REJECT_BASE_PATH, REJECT_PREDICTION_THRESHOLD,
+    PREDICTION_TO_STORY_STATUS_MAPPING
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -81,6 +85,38 @@ def load_custom_tag_models(client_id, model_dict):
         )
 
     return custom_tag_model, binarizer
+
+
+# Function to load reject models and binarizers
+def load_reject_models(client_id, model_dict):
+    """
+    Load Reject models and binarizers.
+
+    Args:
+        client_id (str): The ID of the client.
+        model_dict (dict): A dictionary containing model and binarizer file paths.
+
+    Returns:
+        reject_model (torch.jit.ScriptModule): The Reject model.
+        binarizer (AutoTokenizer): The Reject binarizer (tokenizer).
+    """
+    model_file = model_dict.get('neuron_model')
+    binarizer_file = model_dict.get('tokenizer')
+
+    if not model_file:
+        return None, None
+
+    reject_model = torch.jit.load(
+        os.path.join(BERT_REJECT_BASE_PATH, os.path.join(str(client_id), model_file))
+    )
+
+    binarizer = None
+    if binarizer_file:
+        binarizer = AutoTokenizer.from_pretrained(
+            os.path.join(BERT_REJECT_BASE_PATH, os.path.join(str(client_id), binarizer_file))
+        )
+
+    return reject_model, binarizer
 
 
 def get_ml_classifier():
@@ -154,15 +190,28 @@ def get_bert_classifier():
             'tokenizer': custom_tag_binarizer
         }
 
+    # Create a defaultdict to store reject models
+    reject_model_map = {}
+    # Loading reject models and tokenizer for different clients
+    for client_id, model_dict in json.loads(
+            SETTINGS.CLIENT_STORY_REJECT_MODEL_MAPPING).items():
+        reject_model, reject_model_tokenizer = load_reject_models(
+            client_id, model_dict)
+
+        reject_model_map[client_id] = {
+            'model': reject_model,
+            'tokenizer': reject_model_tokenizer
+        }
+
     return (industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer, ner_tokenizer,
             ner_neuron_model, ner_model_config, business_event_neuron_model, business_event_tokenizer,
-            custom_tag_model_map)
+            custom_tag_model_map, reject_model_map)
 
 
 (
     industry_neuron_model, industry_tokenizer, topic_neuron_model, topic_tokenizer, ner_tokenizer,
     ner_neuron_model, ner_model_config, business_event_neuron_model, business_event_tokenizer,
-    custom_tag_model_map
+    custom_tag_model_map, reject_model_map
 ) = get_bert_classifier()
 
 classified_model_map = get_ml_classifier()
@@ -417,6 +466,66 @@ async def predict_custom_tag(story: BertText,
         logger.error(
             f"Custom Tag Classifier: Error occurred for story id: {story_id} "
             f"Error: {err}, Traceback: {traceback.format_exc()}")
+
+
+@app.post('/predict/reject_by_client_id/')
+async def predict_reject_by_client_id(story: BertText,
+                             auth_status: int = Depends(is_authenticated_user)):
+    """
+    Endpoint for tagging Custom Tags from text for different clients.
+
+    Args:
+        story (BertText): The input text for prediction.
+        auth_status (int, optional): Authentication status. Defaults to Depends(is_authenticated_user).
+
+    Returns:
+        dict: A dictionary containing predicted custom tags and story ID.
+    """
+    story_id = ""
+    client_id = ""
+    try:
+        dt = datetime.now()
+        data = story.dict()['story']
+        input_text, story_id, client_id = data['story_text'], data['story_id'], data['client_id']
+        max_length = 512
+
+        # Tokenize the input text using the client-specific tokenizer
+        encoding = reject_model_map[str(client_id)]["tokenizer"].encode_plus(
+            input_text,
+            max_length=max_length,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt",
+        )
+        example_inputs_paraphrase = (
+            encoding["input_ids"],
+            encoding["attention_mask"],
+            encoding["token_type_ids"],
+        )
+
+        # Get logits from the client-specific custom tag model
+        logits = reject_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0][0]
+        # sigmoid = torch.nn.Sigmoid()
+        # probs = sigmoid(logits.squeeze().cpu())
+        # predictions = np.zeros(probs.shape)
+        # predictions[np.where(probs >= CUSTOM_TAG_PREDICTION_THRESHOLD)] = 1
+
+        predicted_class = logits[0][0].argmax().item()
+
+        # Map predicted status to story status
+        predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
+        output_labels = {'predicted_tags': predicted_status, "story_id": story_id}
+
+        # Log the prediction completion
+        logger.info(
+            f"Custom Tag Classifier: completed prediction for story_id: {story_id} "
+            f"in {(datetime.now() - dt).total_seconds()} seconds")
+        return output_labels
+    except Exception as err:
+        # Log errors and exceptions
+        logger.error(
+            f"Rejection Model: Error occurred for client_id: {client_id} "
+            f"story id: {story_id} Error: {err}, Traceback: {traceback.format_exc()}")
 
 
 @app.post('/predict/business_event/')

@@ -25,6 +25,7 @@ INDUSTRY_PREDICTION_THRESHOLD = 0.7
 TOPIC_PREDICTION_THRESHOLD = 0.7
 CUSTOM_TAG_PREDICTION_THRESHOLD = 0.7
 BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
+REJECT_PREDICTION_THRESHOLD = 0.7
 # MAX_LEN is maximum length in number of tokens for the inputs to the
 # transformer model. When the tokenizer is loaded with from_pretrained,
 # this will be set to the value stored for the associated model
@@ -34,6 +35,7 @@ MAX_LEN = 512
 # Define root and base paths
 ROOT_DIR = os.path.join(".")
 BERT_CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/bert".format(ROOT_DIR)
+BERT_REJECT_BASE_PATH = "{}/ml_models/Reject/bert".format(ROOT_DIR)
 SK_LRN_CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/sk-learn".format(ROOT_DIR)
 REJECT_TAG_BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
 
@@ -96,7 +98,8 @@ BUSINESS_EVENT_MAPPING = {
 }
 
 # contify's custom industry to standard industry mapping
-INDUSTRY_MAPPING = {98636: 622,
+INDUSTRY_MAPPING = {
+ 98636: 622,
  98637: 545,
  98638: 128,
  98639: 548,
@@ -220,6 +223,10 @@ CUSTOM_TAG_CLASSES = {
     ).id2label.values())
 }
 
+PREDICTION_TO_STORY_STATUS_MAPPING = {
+ 0: 2,
+ 1: -1
+}
 
 CLASSIFIED_MODELS = {
     'Reject': [
