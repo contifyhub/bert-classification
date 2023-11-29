@@ -472,7 +472,7 @@ async def predict_custom_tag(story: BertText,
 async def predict_reject_by_client_id(story: BertText,
                              auth_status: int = Depends(is_authenticated_user)):
     """
-    Endpoint for tagging Custom Tags from text for different clients.
+    Endpoint for Rejecting stories for different clients.
 
     Args:
         story (BertText): The input text for prediction.
@@ -481,12 +481,12 @@ async def predict_reject_by_client_id(story: BertText,
     Returns:
         dict: A dictionary containing predicted custom tags and story ID.
     """
-    story_id = ""
+    story_uuid = ""
     client_id = ""
     try:
         dt = datetime.now()
         data = story.dict()['story']
-        input_text, story_id, client_id = data['story_text'], data['story_id'], data['client_id']
+        input_text, story_uuid, client_id = data['story_text'], data['story_uuid'], data['client_id']
         max_length = 512
 
         # Tokenize the input text using the client-specific tokenizer
@@ -505,27 +505,27 @@ async def predict_reject_by_client_id(story: BertText,
 
         # Get logits from the client-specific custom tag model
         logits = reject_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0][0]
-        # sigmoid = torch.nn.Sigmoid()
-        # probs = sigmoid(logits.squeeze().cpu())
-        # predictions = np.zeros(probs.shape)
-        # predictions[np.where(probs >= CUSTOM_TAG_PREDICTION_THRESHOLD)] = 1
-
-        predicted_class = logits[0][0].argmax().item()
+        probabilities = torch.nn.functional.softmax(logits, dim=1)
+        # Check if probability of class 1 is greater than the threshold
+        if probabilities[0][1].item() > REJECT_PREDICTION_THRESHOLD:
+            predicted_class = 1
+        else:
+            predicted_class = 0
 
         # Map predicted status to story status
         predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
-        output_labels = {'predicted_tags': predicted_status, "story_id": story_id}
+        output_labels = {'predicted_status': predicted_status, "story_uuid": story_uuid}
 
         # Log the prediction completion
         logger.info(
-            f"Custom Tag Classifier: completed prediction for story_id: {story_id} "
+            f"Custom Tag Classifier: completed prediction for story_id: {story_uuid} "
             f"in {(datetime.now() - dt).total_seconds()} seconds")
         return output_labels
     except Exception as err:
         # Log errors and exceptions
         logger.error(
             f"Rejection Model: Error occurred for client_id: {client_id} "
-            f"story id: {story_id} Error: {err}, Traceback: {traceback.format_exc()}")
+            f"story id: {story_uuid} Error: {err}, Traceback: {traceback.format_exc()}")
 
 
 @app.post('/predict/business_event/')
