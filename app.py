@@ -486,7 +486,8 @@ async def predict_reject_by_client_id(story: BertText,
     try:
         dt = datetime.now()
         data = story.dict()['story']
-        input_text, story_uuid, client_id = data['story_text'], data['story_uuid'], data['client_id']
+        input_text, story_uuid, client_id = data['story_text'], \
+            data['story_uuid'], data['client_id']
         max_length = 512
 
         # Tokenize the input text using the client-specific tokenizer
@@ -503,10 +504,10 @@ async def predict_reject_by_client_id(story: BertText,
             encoding["token_type_ids"],
         )
 
-        # Get logits from the client-specific custom tag model
-        logits = reject_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0][0]
+        # Get logits from the client-specific reject model
+        logits = reject_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0]
         probabilities = torch.nn.functional.softmax(logits, dim=1)
-        # Check if probability of class 1 is greater than the threshold
+        # Check if probability of class 1 (Reject) is greater than the threshold
         if probabilities[0][1].item() > REJECT_PREDICTION_THRESHOLD:
             predicted_class = 1
         else:
