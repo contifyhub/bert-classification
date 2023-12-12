@@ -114,10 +114,7 @@ def extract_ner(predictions):
         elif label.startswith('I-') and "##" not in token:
             # Append non-subword tokens to the current entity with a space
             if current_entity:
-                if token.isalnum():
-                    current_entity['entity'] += ' ' + token
-                else:
-                    current_entity['entity'] += token
+                current_entity['entity'] += ' ' + token
 
         elif label.startswith('I-') and "##" in token:
             # Continue appending tokens to the current entity
@@ -135,6 +132,7 @@ def extract_ner(predictions):
     if current_entity:
         current_entity['entity'] = clean_entity(current_entity['entity'])
         ner_results.append(current_entity)
+        previous_token = current_entity
 
     return ner_results
 
