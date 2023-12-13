@@ -519,7 +519,7 @@ async def predict_reject_by_client_id(story: BertText,
 
         # Log the prediction completion
         logger.info(
-            f"Custom Tag Classifier: completed prediction for story_id: {story_uuid} "
+            f"Rejection Model: completed prediction for story_id: {story_uuid} "
             f"in {(datetime.now() - dt).total_seconds()} seconds")
         return output_labels
     except Exception as err:
