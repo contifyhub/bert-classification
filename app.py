@@ -109,23 +109,14 @@ def load_reject_models(client_id, model_dict):
     reject_model = torch.jit.load(
         os.path.join(BERT_REJECT_BASE_PATH, os.path.join(str(client_id), model_file))
     )
-    global_reject_model = torch.jit.load(
-        os.path.join(BERT_REJECT_BASE_PATH,
-                     os.path.join(str(client_id), model_file))
-    )
 
     binarizer = None
-    global_binarizer = None
     if binarizer_file:
         binarizer = AutoTokenizer.from_pretrained(
             os.path.join(BERT_REJECT_BASE_PATH, os.path.join(str(client_id), binarizer_file))
         )
-        global_binarizer = AutoTokenizer.from_pretrained(
-            os.path.join(BERT_REJECT_BASE_PATH,
-                         os.path.join(str(client_id), binarizer_file))
-        )
 
-    return reject_model, binarizer, global_reject_model, global_binarizer
+    return reject_model, binarizer
 
 
 def get_ml_classifier():
