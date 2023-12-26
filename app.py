@@ -22,7 +22,7 @@ from constants import (
     BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS,
     BASE_PATH, SK_LRN_CUSTOM_TAG_BASE_PATH,
     REJECT_TAG_BASE_PATH, BERT_REJECT_BASE_PATH, REJECT_PREDICTION_THRESHOLD,
-    PREDICTION_TO_STORY_STATUS_MAPPING
+    PREDICTION_TO_STORY_STATUS_MAPPING, CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -508,8 +508,12 @@ async def predict_reject_by_client_id(story: BertText,
         # Get logits from the client-specific reject model
         logits = reject_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0]
         probabilities = torch.nn.functional.softmax(logits, dim=1)
-        # Check if probability of class 1 (Reject) is greater than the threshold
-        if probabilities[0][1].item() > REJECT_PREDICTION_THRESHOLD:
+        if client_id == CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID:
+            probability, _ = torch.max(probabilities, dim=1)
+            max_probabilities = probability.item()
+        else:
+            max_probabilities = probabilities[0][1].item()
+        if max_probabilities > REJECT_PREDICTION_THRESHOLD:
             predicted_class = 1
         else:
             predicted_class = 0
