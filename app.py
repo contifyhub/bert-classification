@@ -22,7 +22,8 @@ from constants import (
     BUSINESS_EVENT_CLASSES, BUSINESS_EVENT_MAPPING, CLASSIFIED_MODELS,
     BASE_PATH, SK_LRN_CUSTOM_TAG_BASE_PATH,
     REJECT_TAG_BASE_PATH, BERT_REJECT_BASE_PATH, REJECT_PREDICTION_THRESHOLD,
-    PREDICTION_TO_STORY_STATUS_MAPPING, CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID
+    PREDICTION_TO_STORY_STATUS_MAPPING,
+    CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID, GLOBAL_REJECT_PREDICTION_THRESHOLD
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -511,12 +512,16 @@ async def predict_reject_by_client_id(story: BertText,
         if client_id == CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID:
             probability, _ = torch.max(probabilities, dim=1)
             max_probabilities = probability.item()
+            if max_probabilities > GLOBAL_REJECT_PREDICTION_THRESHOLD:
+                predicted_class = 1
+            else:
+                predicted_class = 0
         else:
             max_probabilities = probabilities[0][1].item()
-        if max_probabilities > REJECT_PREDICTION_THRESHOLD:
-            predicted_class = 1
-        else:
-            predicted_class = 0
+            if max_probabilities > REJECT_PREDICTION_THRESHOLD:
+                predicted_class = 1
+            else:
+                predicted_class = 0
 
         # Map predicted status to story status
         predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
