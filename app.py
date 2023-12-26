@@ -23,7 +23,8 @@ from constants import (
     BASE_PATH, SK_LRN_CUSTOM_TAG_BASE_PATH,
     REJECT_TAG_BASE_PATH, BERT_REJECT_BASE_PATH, REJECT_PREDICTION_THRESHOLD,
     PREDICTION_TO_STORY_STATUS_MAPPING,
-    CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID, GLOBAL_REJECT_PREDICTION_THRESHOLD
+    CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID,
+    GLOBAL_REJECT_PREDICTION_THRESHOLD, PREDICTION_TO_STORY_GLOBAL_TAG_MAPPING
 )
 from serializers import BertText, NerText, ArticleText
 import numpy as np
@@ -510,6 +511,7 @@ async def predict_reject_by_client_id(story: BertText,
         logits = reject_model_map[str(client_id)]["model"](*example_inputs_paraphrase)[0]
         probabilities = torch.nn.functional.softmax(logits, dim=1)
         if client_id == CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID:
+            predicted_tag = torch.argmax(probabilities).item()
             probability, _ = torch.max(probabilities, dim=1)
             max_probabilities = probability.item()
             if max_probabilities > GLOBAL_REJECT_PREDICTION_THRESHOLD:
@@ -525,7 +527,12 @@ async def predict_reject_by_client_id(story: BertText,
 
         # Map predicted status to story status
         predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
-        output_labels = {'predicted_status': predicted_status, "story_uuid": story_uuid}
+        if client_id == CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID:
+            output_labels = {'predicted_status': predicted_status,
+                             'predicted_tag': PREDICTION_TO_STORY_GLOBAL_TAG_MAPPING[predicted_tag],
+                             "story_uuid": story_uuid}
+        else:
+            output_labels = {'predicted_status': predicted_status, "story_uuid": story_uuid}
 
         # Log the prediction completion
         logger.info(
