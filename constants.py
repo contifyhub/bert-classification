@@ -26,7 +26,7 @@ TOPIC_PREDICTION_THRESHOLD = 0.7
 CUSTOM_TAG_PREDICTION_THRESHOLD = 0.7
 BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
 REJECT_PREDICTION_THRESHOLD = 0.85
-GLOBAL_REJECT_PREDICTION_THRESHOLD = 0.7
+GLOBAL_REJECT_PREDICTION_THRESHOLD = 0.75
 # MAX_LEN is maximum length in number of tokens for the inputs to the
 # transformer model. When the tokenizer is loaded with from_pretrained,
 # this will be set to the value stored for the associated model
