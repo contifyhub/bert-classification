@@ -1,7 +1,106 @@
+import config
+import os
+from functools import lru_cache
+import json
+from transformers import AutoConfig
+
+
+ROOT_DIR = os.path.join(".")
+BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
+
+# Import the settings from your configuration module
+@lru_cache
+def get_settings():
+    # This function returns the settings defined in config.BertClassifierSettings
+    return config.BertClassifierSettings()
+
+
+# Call get_settings using lru_cache decorator to cache the result
+SETTINGS = get_settings()
+
+# Define prediction thresholds for different categories
+# These thresholds are used for classification confidence level
+# Adjust these thresholds based on your classification needs
 INDUSTRY_PREDICTION_THRESHOLD = 0.7
+TOPIC_PREDICTION_THRESHOLD = 0.7
+CUSTOM_TAG_PREDICTION_THRESHOLD = 0.7
+BUSINESS_EVENT_PREDICTION_THRESHOLD = 0.7
+REJECT_PREDICTION_THRESHOLD = 0.85
+GLOBAL_REJECT_PREDICTION_THRESHOLD = 0.85
+# MAX_LEN is maximum length in number of tokens for the inputs to the
+# transformer model. When the tokenizer is loaded with from_pretrained,
+# this will be set to the value stored for the associated model
+MAX_LEN = 512
+
+
+# Define root and base paths
+ROOT_DIR = os.path.join(".")
+BERT_CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/bert".format(ROOT_DIR)
+BERT_REJECT_BASE_PATH = "{}/ml_models/Reject/bert".format(ROOT_DIR)
+SK_LRN_CUSTOM_TAG_BASE_PATH = "{}/ml_models/Custom_Tags/sk-learn".format(ROOT_DIR)
+REJECT_TAG_BASE_PATH = "{}/ml_models/".format(ROOT_DIR)
+
+BUSINESS_EVENT_MAPPING = {
+ 98485: 2,
+ 98495: 3,
+ 98496: 4,
+ 98498: 5,
+ 98499: 6,
+ 98500: 7,
+ 98501: 8,
+ 98502: 9,
+ 98503: 10,
+ 98504: 11,
+ 98505: 12,
+ 98506: 14,
+ 98559: 13,
+ 98486: 40,
+ 98540: 41,
+ 98541: 42,
+ 98542: 43,
+ 98487: 44,
+ 98543: 45,
+ 98544: 46,
+ 98545: 47,
+ 98488: 15,
+ 98509: 16,
+ 98510: 17,
+ 98511: 18,
+ 98512: 19,
+ 98513: 20,
+ 98515: 21,
+ 98489: 37,
+ 98533: 38,
+ 98536: 39,
+ 98491: 36,
+ 98490: 31,
+ 98529: 32,
+ 98530: 33,
+ 98531: 34,
+ 98532: 35,
+ 98518: 22,
+ 98519: 23,
+ 98520: 24,
+ 98521: 25,
+ 98523: 26,
+ 98524: 27,
+ 98525: 28,
+ 98526: 29,
+ 98527: 30,
+ 98546: 48,
+ 98547: 49,
+ 98548: 50,
+ 98549: 51,
+ 98550: 52,
+ 98551: 53,
+ 98552: 54,
+ 98553: 55,
+ 98555: 56
+}
 
 # contify's custom industry to standard industry mapping
-INDUSTRY_MAPPING = {98636: 622,
+INDUSTRY_MAPPING = {
+ 98636: 622,
  98637: 545,
  98638: 128,
  98639: 548,
@@ -111,4 +210,37 @@ INDUSTRY_MAPPING = {98636: 622,
  98714: 375,
  98727: 369}
 
+
+INDUSTRY_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.INDUSTRY_MODEL_FILE_NAME)).id2label.values())
+TOPIC_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.TOPIC_MODEL_FILE_NAME)).id2label.values())
+BUSINESS_EVENT_CLASSES = list(AutoConfig.from_pretrained(os.path.join(BASE_PATH, SETTINGS.BUSINESS_EVENT_MODEL_FILE_NAME)).id2label.values())
+
+
+CUSTOM_TAG_CLASSES = {
+    214: list(AutoConfig.from_pretrained(os.path.join(
+     BERT_CUSTOM_TAG_BASE_PATH,
+     os.path.join(str(214), json.loads(SETTINGS.CUSTOM_TAG_CLIENT_MODEL_MAPPING)[str(214)]['tokenizer'])
+    )
+    ).id2label.values())
+}
+
+PREDICTION_TO_STORY_STATUS_MAPPING = {
+ 0: 2,
+ 1: -1
+}
+PREDICTION_TO_STORY_GLOBAL_TAG_MAPPING = {0: 17012, 1: 16727, 2: 16718}
+
+CLASSIFIED_MODELS = {
+    'Reject': [
+        {'model_file': 'SI_Non_Business_Reject.pkl'}
+    ],
+    '135': [
+        {
+            'model_file': 'custom_tags_model_135_en_1.pkl',
+            'binarizer_file': 'custom_tags_binarizer_135_en_1.pkl'
+        }
+    ]
+}
+
+CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID = 82
 
