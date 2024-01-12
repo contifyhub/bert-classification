@@ -590,7 +590,7 @@ async def predict_business_event(story: BertText,
         # Map predicted labels to custom tags for the client
         predicted_labels = [BUSINESS_EVENT_CLASSES[idx] for idx, label in
                             enumerate(predictions) if label == 1]
-        business_event_tags = [BUSINESS_EVENT_MAPPING[int(i)] for i in predicted_labels]
+        business_event_tags = [int(i) for i in predicted_labels]
         output_labels = {'predicted_tags': business_event_tags, "story_id": story_id}
 
         # Log the prediction completion
