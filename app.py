@@ -263,7 +263,7 @@ def is_authenticated_user(
 async def predict_topic(story: BertText,
                         auth_status: int = Depends(is_authenticated_user)):
     """
-    Endpoint for tagging topics from text.
+    Endpoint for tagging topics from text .
 
     Args:
         story (BertText): The input text for prediction.
