@@ -512,26 +512,31 @@ async def predict_reject_by_client_id(story: BertText,
         probabilities = torch.nn.functional.softmax(logits, dim=1)
         if client_id == CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID:
             predicted_tag = torch.argmax(probabilities).item()
-            probability, _ = torch.max(probabilities, dim=1)
-            max_probabilities = probability.item()
-            if max_probabilities > GLOBAL_REJECT_PREDICTION_THRESHOLD:
-                predicted_class = 1
+            # send an empty response in case predicted_tag class is 3.
+            if predicted_tag == 3:
+                output_labels = {}
             else:
-                predicted_class = 0
+                probability, _ = torch.max(probabilities, dim=1)
+                max_probabilities = probability.item()
+                if max_probabilities > GLOBAL_REJECT_PREDICTION_THRESHOLD:
+                    predicted_class = 1
+                else:
+                    predicted_class = 0
+                # Map predicted status to story status
+                predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
+                output_labels = {'predicted_status': predicted_status,
+                                 'predicted_tag':
+                                     PREDICTION_TO_STORY_GLOBAL_TAG_MAPPING[
+                                         predicted_tag],
+                                 "story_uuid": story_uuid}
         else:
             max_probabilities = probabilities[0][1].item()
             if max_probabilities > REJECT_PREDICTION_THRESHOLD:
                 predicted_class = 1
             else:
                 predicted_class = 0
-
-        # Map predicted status to story status
-        predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
-        if client_id == CONTIFY_FOR_SALES_COMPANY_PREFERENCE_ID:
-            output_labels = {'predicted_status': predicted_status,
-                             'predicted_tag': PREDICTION_TO_STORY_GLOBAL_TAG_MAPPING[predicted_tag],
-                             "story_uuid": story_uuid}
-        else:
+            # Map predicted status to story status
+            predicted_status = PREDICTION_TO_STORY_STATUS_MAPPING[predicted_class]
             output_labels = {'predicted_status': predicted_status, "story_uuid": story_uuid}
 
         # Log the prediction completion
